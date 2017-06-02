@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -9,6 +10,7 @@
 extern "C" {
 #include "bme280.h"
 }
+
 #define SPI_READ    0x80
 #define SPI_WRITE   0x7F
 #define SPI_BUFFER_LEN 5
@@ -160,36 +162,7 @@ void BME280_delay_msek(u32 msek) {
     usleep(msek*1000);
 }
 
-s8 SPI_routine() {
-    bme280.bus_write = BME280_SPI_bus_write;
-    bme280.bus_read = BME280_SPI_bus_read;
-    bme280.delay_msec = BME280_delay_msek;
-
-    return BME280_INIT_VALUE;
-}
-
-int bme280_init() {
-    /* The variable used to assign the standby time*/
-    u8 v_stand_by_time_u8 = BME280_INIT_VALUE;
-    s32 com_rslt = ERROR;
-    com_rslt = bme280_init(&bme280);
-
-    com_rslt += bme280_set_power_mode(BME280_NORMAL_MODE);
-    com_rslt += bme280_set_oversamp_humidity(BME280_OVERSAMP_4X);
-    com_rslt += bme280_set_oversamp_pressure(BME280_OVERSAMP_4X);
-    com_rslt += bme280_set_oversamp_temperature(BME280_OVERSAMP_4X);
-
-    com_rslt += bme280_set_standby_durn(BME280_STANDBY_TIME_1_MS);
-
-    com_rslt += bme280_get_standby_durn(&v_stand_by_time_u8);
-    std::cout << "BME280 initialized, rslt: " << com_rslt << std::endl;
-}
-
-int main(int argc, char* argv[]) {
-    std::cout << "HALLO" << std::endl;
-
-    spi_init(0);
-
+struct bme280data {
     /* The variable used to assign the standby time*/
     u8 v_stand_by_time_u8 = BME280_INIT_VALUE;
     /* The variable used to read uncompensated temperature*/
@@ -204,38 +177,66 @@ int main(int argc, char* argv[]) {
     u32 v_comp_press_u32[2] = {BME280_INIT_VALUE, BME280_INIT_VALUE};
     /* The variable used to read compensated humidity*/
     u32 v_comp_humidity_u32[2] = {BME280_INIT_VALUE, BME280_INIT_VALUE};
+};
 
-    /* result of communication results*/
+bme280data data;
+
+void bme280_debug_read() {
     s32 com_rslt = ERROR;
-    SPI_routine();
-
-    bme280_init();
-
     while(true) {
         // Read data
         /* API is used to read the uncompensated temperature*/
-        com_rslt += bme280_read_uncomp_temperature(&v_data_uncomp_temp_s32);
+        com_rslt += bme280_read_uncomp_temperature(&data.v_data_uncomp_temp_s32);
 
         /* API is used to read the uncompensated pressure*/
-        com_rslt += bme280_read_uncomp_pressure(&v_data_uncomp_pres_s32);
+        com_rslt += bme280_read_uncomp_pressure(&data.v_data_uncomp_pres_s32);
 
         /* API is used to read the uncompensated humidity*/
-        com_rslt += bme280_read_uncomp_humidity(&v_data_uncomp_hum_s32);
+        com_rslt += bme280_read_uncomp_humidity(&data.v_data_uncomp_hum_s32);
         /* API is used to compute the compensated temperature*/
-        v_comp_temp_s32[0] = bme280_compensate_temperature_int32(
-                v_data_uncomp_temp_s32);
+        data.v_comp_temp_s32[0] = bme280_compensate_temperature_int32(data.v_data_uncomp_temp_s32);
 
         /* API is used to compute the compensated pressure*/
-        v_comp_press_u32[0] = bme280_compensate_pressure_int32(
-                v_data_uncomp_pres_s32);
+        data.v_comp_press_u32[0] = bme280_compensate_pressure_int32(data.v_data_uncomp_pres_s32);
 
         /* API is used to compute the compensated humidity*/
-        v_comp_humidity_u32[0] = bme280_compensate_humidity_int32(
-                v_data_uncomp_hum_s32);
+        data.v_comp_humidity_u32[0] = bme280_compensate_humidity_int32(data.v_data_uncomp_hum_s32);
 
-        std::cout << "Temperature is: " << ((float)v_comp_temp_s32[0])/100 << std::endl;
-        std::cout << "Pressure is: " << ((float)v_comp_press_u32[0])/256 << std::endl;
-        std::cout << "Humidity is: " << ((float)v_comp_humidity_u32[0])/1024 << std::endl;
+        std::cout << "Temperature is: " << ((float)data.v_comp_temp_s32[0])/100 << std::endl;
+        std::cout << "Pressure is: " << ((float)data.v_comp_press_u32[0])/256 << std::endl;
+        std::cout << "Humidity is: " << ((float)data.v_comp_humidity_u32[0])/1024 << std::endl;
         usleep(3000000);
     }
+}
+
+void init_bme280() {
+    spi_init(0);
+    bme280.bus_write = BME280_SPI_bus_write;
+    bme280.bus_read = BME280_SPI_bus_read;
+    bme280.delay_msec = BME280_delay_msek;
+    /* The variable used to assign the standby time*/
+    u8 v_stand_by_time_u8 = BME280_INIT_VALUE;
+    s32 com_rslt = ERROR;
+    com_rslt = bme280_init(&bme280);
+
+    com_rslt += bme280_set_power_mode(BME280_NORMAL_MODE);
+    com_rslt += bme280_set_oversamp_humidity(BME280_OVERSAMP_4X);
+    com_rslt += bme280_set_oversamp_pressure(BME280_OVERSAMP_4X);
+    com_rslt += bme280_set_oversamp_temperature(BME280_OVERSAMP_4X);
+
+    com_rslt += bme280_set_standby_durn(BME280_STANDBY_TIME_1_MS);
+
+    com_rslt += bme280_get_standby_durn(&v_stand_by_time_u8);
+    std::cout << "BME280 initialized, rslt: " << com_rslt << std::endl;
+
+    bme280_debug_read();
+}
+
+int main(int argc, char* argv[]) {
+    std::cout << "HALLO" << std::endl;
+
+    std::thread t_bme280(init_bme280);
+
+    t_bme280.join();
+
 }
