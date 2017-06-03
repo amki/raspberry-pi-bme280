@@ -3,18 +3,20 @@ project (Sensei)
 
 add_compile_options(-std=c++11)
 
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
+    lib/pistache)
+
+set(PostgreSQL_TYPE_INCLUDE_DIR "/usr/include/postgresql/")
+
 find_package(Threads REQUIRED)
+find_package(PostgreSQL REQUIRED)
 
-FIND_PACKAGE( Boost 1.55 COMPONENTS system date_time regex REQUIRED )
-INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
+find_library(PISTACHE NAMES libnet_static.a)
 
-find_library(CPPNET cppnetlib-client-connections cppnetlib-server-parsers cppnetlib-uri)
-
-add_executable(Sensei sense.cpp)
+add_executable(Sensei sense.cpp main.cpp sense.cpp sense.h pghandler.hpp pghandler.cpp)
 
 include_directories ("BME280_driver_cmake")
 add_subdirectory (BME280_driver_cmake)
-
 
 if(THREADS_HAVE_PTHREAD_ARG)
   target_compile_options(PUBLIC Sensei "-pthread")
@@ -22,4 +24,7 @@ endif()
 if(CMAKE_THREAD_LIBS_INIT)
   target_link_libraries(Sensei "${CMAKE_THREAD_LIBS_INIT}")
 endif()
-target_link_libraries(Sensei bme280 ${CPPNET} ${Boost_LIBRARIES})
+
+set(PostgreSQL_LIBRARIES "pqxx")
+MESSAGE( STATUS "PSQL LIB:" ${PostgreSQL_LIBRARIES})
+target_link_libraries(Sensei bme280 ${PostgreSQL_LIBRARIES} ${PISTACHE})

@@ -1,25 +1,4 @@
-#include <iostream>
-#include <thread>
-
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <linux/spi/spidev.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-extern "C" {
-#include "bme280.h"
-}
-#include "pghandler.hpp"
-
-#include "lib/pistache/include/endpoint.h"
-#include <pqxx/pqxx>
-
-#define SPI_READ    0x80
-#define SPI_WRITE   0x7F
-#define SPI_BUFFER_LEN 5
-#define BME280_DATA_INDEX   1
-#define BME280_ADDRESS_INDEX    2
+#include "sense.h"
 
 char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
@@ -27,6 +6,9 @@ int spi_cs0_fd;
 int spi_cs1_fd;
 unsigned char spi_bitsPerWord = 8;
 unsigned int spi_speed = 1000000;
+
+struct bme280_t bme280;
+bme280data data;
 
 std::string hexStr(unsigned char *data, int len)
 {
@@ -37,8 +19,6 @@ std::string hexStr(unsigned char *data, int len)
     }
     return s;
 }
-
-struct bme280_t bme280;
 
 int spi_init(int spi_device) {
     int status = -1;
@@ -166,25 +146,6 @@ void BME280_delay_msek(u32 msek) {
     usleep(msek*1000);
 }
 
-struct bme280data {
-    /* The variable used to assign the standby time*/
-    u8 v_stand_by_time_u8 = BME280_INIT_VALUE;
-    /* The variable used to read uncompensated temperature*/
-    s32 v_data_uncomp_temp_s32 = BME280_INIT_VALUE;
-    /* The variable used to read uncompensated pressure*/
-    s32 v_data_uncomp_pres_s32 = BME280_INIT_VALUE;
-    /* The variable used to read uncompensated pressure*/
-    s32 v_data_uncomp_hum_s32 = BME280_INIT_VALUE;
-    /* The variable used to read compensated temperature*/
-    s32 v_comp_temp_s32[2] = {BME280_INIT_VALUE, BME280_INIT_VALUE};
-    /* The variable used to read compensated pressure*/
-    u32 v_comp_press_u32[2] = {BME280_INIT_VALUE, BME280_INIT_VALUE};
-    /* The variable used to read compensated humidity*/
-    u32 v_comp_humidity_u32[2] = {BME280_INIT_VALUE, BME280_INIT_VALUE};
-};
-
-bme280data data;
-
 void bme280_debug_read() {
     s32 com_rslt = ERROR;
     while(true) {
@@ -235,46 +196,4 @@ void init_bme280() {
 
     bme280_debug_read();
 }
-using namespace Net;
 
-class HelloHandler : public Http::Handler {
-public:
-
-    HTTP_PROTOTYPE(HelloHandler)
-
-    void onRequest(const Http::Request& request, Http::ResponseWriter response) {
-        if ((request.resource() == "/" || request.resource() == "/index.html")) {
-                Http::serveFile(response, "public/index.html");
-        } else if (request.resource() == "/code.js") {
-                Http::serveFile(response, "public/code.js");
-        } else if(request.resource() == "/api/sense") {
-            std::ostringstream strstream;
-            strstream << "Temperature is: " << ((float)data.v_comp_temp_s32[0])/100 << std::endl;
-            strstream << "Pressure is: " << ((float)data.v_comp_press_u32[0])/256 << std::endl;
-            strstream << "Humidity is: " << ((float)data.v_comp_humidity_u32[0])/1024 << std::endl;
-            response.send(Http::Code::Ok, strstream.str());
-        }
-    }
-};
-
-void init_http() {
-    Net::Address addr(Net::Ipv4::any(), Net::Port(8088));
-
-    auto opts = Http::Endpoint::options().threads(1);
-    Http::Endpoint server(addr);
-    server.init(opts);
-    server.setHandler(std::make_shared<HelloHandler>());
-    server.serve();
-}
-
-int main(int argc, char* argv[]) {
-    std::cout << "HALLO" << std::endl;
-
-    PgHandler pgH("dbname = sensei user = sensei password = ohCou2rei9ouL0ae hostaddr = 127.0.0.1 port = 5432");
-
-    std::thread t_bme280(init_bme280);
-    init_http();
-
-    t_bme280.join();
-
-}
