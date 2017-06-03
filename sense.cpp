@@ -121,18 +121,18 @@ s8 BME280_SPI_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
         buf[index + BME280_DATA_INDEX] = *(reg_data + i);
     }
 
-    iError = spi_rw(dev_addr, buf, SPI_BUFFER_LEN);
+    iError = spi_rw(dev_addr, buf, cnt*2);
     return iError;
 }
 
 s8 BME280_SPI_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
-    std::cout << "SPI: Reading reg " << hexStr(&reg_addr,1);
+    std::cout << "SPI: Reading reg " << hexStr(&reg_addr,1) << " cnt: " << hexStr(&cnt,1);
     s32 iError = BME280_INIT_VALUE;
-    u8 buf[SPI_BUFFER_LEN] = {0,};
+    u8 buf[cnt+1] = {0,};
 
     buf[BME280_INIT_VALUE] = reg_addr|SPI_READ;
 
-    iError = spi_rw(dev_addr, buf, SPI_BUFFER_LEN);
+    iError = spi_rw(dev_addr, buf, cnt+1);
     for(int i = 0;i < cnt; i++) {
         *(reg_data + i) = buf[i+BME280_DATA_INDEX];
     }
@@ -183,16 +183,18 @@ void init_bme280() {
     u8 v_stand_by_time_u8 = BME280_INIT_VALUE;
     s32 com_rslt = ERROR;
     com_rslt = bme280_init(&bme280);
+    std::cout << "BME280 initialized, rslt: " << com_rslt << std::endl;
 
     com_rslt += bme280_set_power_mode(BME280_NORMAL_MODE);
-    com_rslt += bme280_set_oversamp_humidity(BME280_OVERSAMP_4X);
-    com_rslt += bme280_set_oversamp_pressure(BME280_OVERSAMP_4X);
+    std::cout << "BME280 set power mode, rslt: " << com_rslt << std::endl;
+    com_rslt += bme280_set_oversamp_humidity(BME280_OVERSAMP_1X);
+    com_rslt += bme280_set_oversamp_pressure(BME280_OVERSAMP_2X);
     com_rslt += bme280_set_oversamp_temperature(BME280_OVERSAMP_4X);
 
     com_rslt += bme280_set_standby_durn(BME280_STANDBY_TIME_1_MS);
 
     com_rslt += bme280_get_standby_durn(&v_stand_by_time_u8);
-    std::cout << "BME280 initialized, rslt: " << com_rslt << std::endl;
+    std::cout << "BME280 all done, rslt: " << com_rslt << std::endl;
 
     bme280_debug_read();
 }
