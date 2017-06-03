@@ -10,6 +10,8 @@ extern "C" {
 #include "bme280.h"
 }
 
+#include "pghandler.hpp"
+
 #define SPI_READ    0x80
 #define SPI_WRITE   0x7F
 #define SPI_BUFFER_LEN 5
@@ -39,3 +41,4 @@ int spi_init();
 int spi_rw();
 
 void init_bme280();
+void init_db();

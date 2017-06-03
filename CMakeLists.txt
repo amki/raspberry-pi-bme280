@@ -3,15 +3,10 @@ project (Sensei)
 
 add_compile_options(-std=c++11)
 
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH}
-    lib/pistache)
-
 set(PostgreSQL_TYPE_INCLUDE_DIR "/usr/include/postgresql/")
 
 find_package(Threads REQUIRED)
 find_package(PostgreSQL REQUIRED)
-
-find_library(PISTACHE NAMES libnet_static.a)
 
 add_executable(Sensei sense.cpp main.cpp sense.cpp sense.h pghandler.hpp pghandler.cpp)
 
@@ -26,5 +21,4 @@ if(CMAKE_THREAD_LIBS_INIT)
 endif()
 
 set(PostgreSQL_LIBRARIES "pqxx")
-MESSAGE( STATUS "PSQL LIB:" ${PostgreSQL_LIBRARIES})
-target_link_libraries(Sensei bme280 ${PostgreSQL_LIBRARIES} ${PISTACHE})
+target_link_libraries(Sensei bme280 ${PostgreSQL_LIBRARIES})

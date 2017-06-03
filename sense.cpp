@@ -5,6 +5,7 @@ char hexmap[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c'
 int spi_cs0_fd;
 int spi_cs1_fd;
 unsigned char spi_bitsPerWord = 8;
+unsigned char spi_LSBFirst = 0;
 unsigned int spi_speed = 1000000;
 
 struct bme280_t bme280;
@@ -50,7 +51,7 @@ int spi_init(int spi_device) {
         std::cerr << "ERROR: Could not set RD mode..." << std::endl;
         return 1;
     }
-    
+ 
     status = ioctl(*spi_cs_fd, SPI_IOC_WR_BITS_PER_WORD, &spi_bitsPerWord);
     if(status < 0) {
         std::cerr << "ERROR: Could not set WR bpw..." << std::endl;
@@ -60,6 +61,18 @@ int spi_init(int spi_device) {
     status = ioctl(*spi_cs_fd, SPI_IOC_RD_BITS_PER_WORD, &spi_bitsPerWord);
     if(status < 0) {
         std::cerr << "ERROR: Could not set RD bpw..." << std::endl;
+        return 1;
+    }
+    
+    status = ioctl(*spi_cs_fd, SPI_IOC_WR_LSB_FIRST, &spi_LSBFirst);
+    if(status < 0) {
+        std::cerr << "ERROR: Could not set WR LSB..." << std::endl;
+        return 1;
+    }
+    
+    status = ioctl(*spi_cs_fd, SPI_IOC_WR_LSB_FIRST, &spi_LSBFirst);
+    if(status < 0) {
+        std::cerr << "ERROR: Could not set RD LSB..." << std::endl;
         return 1;
     }
     
@@ -146,7 +159,8 @@ void BME280_delay_msek(u32 msek) {
     usleep(msek*1000);
 }
 
-void bme280_debug_read() {
+void init_db() {
+    PgHandler pgH("dbname = sensei user = sensei password = ohCou2rei9ouL0ae hostaddr = 127.0.0.1 port = 5432");
     s32 com_rslt = ERROR;
     while(true) {
         // Read data
@@ -168,11 +182,14 @@ void bme280_debug_read() {
         data.v_comp_humidity_u32[0] = bme280_compensate_humidity_int32(data.v_data_uncomp_hum_s32);
 
         std::cout << "Temperature is: " << ((float)data.v_comp_temp_s32[0])/100 << std::endl;
-        std::cout << "Pressure is: " << ((float)data.v_comp_press_u32[0])/256 << std::endl;
+        std::cout << "Pressure is: " << ((float)data.v_comp_press_u32[0])/100 << std::endl;
         std::cout << "Humidity is: " << ((float)data.v_comp_humidity_u32[0])/1024 << std::endl;
-        usleep(3000000);
+        pgH.insertBMEData(((float)data.v_comp_temp_s32[0])/100, ((float)data.v_comp_press_u32[0])/100, ((float)data.v_comp_humidity_u32[0])/1024);
+
+        usleep(10000000);
     }
 }
+
 
 void init_bme280() {
     spi_init(0);
@@ -195,7 +212,5 @@ void init_bme280() {
 
     com_rslt += bme280_get_standby_durn(&v_stand_by_time_u8);
     std::cout << "BME280 all done, rslt: " << com_rslt << std::endl;
-
-    bme280_debug_read();
 }
 
