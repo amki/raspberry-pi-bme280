@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var serveStatic = require('serve-static');
 var http = require('http');
 var path = require('path');
+var compression = require('compression');
 var app = express();
 var pg = require('pg');
 
@@ -26,6 +27,7 @@ var pool = new pg.Pool(config);
 var httpsrv = require('http').createServer(app);
 
 app.set('port', 5654);
+app.use(compression());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
@@ -38,7 +40,7 @@ httpsrv.listen(app.get('port'), function() {
 app.get("/bmedata", function(req,res) {
     var from = new Date(req.query["from"]*1000);
     var to = new Date(req.query["to"]*1000);
-    pool.query("SELECT * FROM bmedata WHERE datetime > $1 and datetime < $2",[from,to],function(err,dbres) {
+    pool.query("SELECT * FROM bmedata WHERE datetime > $1 and datetime < $2 ORDER BY datetime ASC",[from,to],function(err,dbres) {
         if(err) {
             return console.error('SQL Error: ',err);
         }

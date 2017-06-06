@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded',function(){
         var humidity = [];
         var datetime = [];
         for(var i=0;i<data.rows.length;++i) {
-            if(i % 6 == 0) {
+            if(i % 3 == 0) {
                 var row = data.rows[i];
                 temperature.push(row["temperature"]);
                 pressure.push(row["pressure"]);
@@ -17,97 +17,63 @@ document.addEventListener('DOMContentLoaded',function(){
                 datetime.push(row["datetime"]);
             }
         }
-        var tempCtx = $("#temperature");
+        var tempCtx = $("#bme280");
         var myChart = new Chart(tempCtx, {
             type: 'line',
             data: {
                 labels: datetime,
                 datasets: [{
-                    label: 'temp',
-                    data: temperature,
-                    backgroundColor: "rgba(224,60,60,0.4)"
-                }]
+                    label: 'Temperature °C',
+                    backgroundColor: "rgba(224,60,60,0.4)",
+                    yAxisID: "y-axis-0",
+                    data: temperature
+                }, {
+                    label: 'Humidity %',
+                    backgroundColor: "rgba(66,134,244,0.4)",
+                    yAxisID: "y-axis-1",
+                    data: humidity
+                }, {
+                    label: 'Pressure hPa',
+                    backgroundColor: "rgba(153,255,51,0.4)",
+                    yAxisID: "y-axis-2",
+                    data: pressure
+                }
+                ]
             },
             options: {
-                maintainAspectRation: false,
-                elements: {
-                    line: {
-                        tension: 0
-                    }
-                },
-                animation: {
-                    duration: 0
-                },
                 scales: {
                     yAxes: [{
+                        "id": "y-axis-0",
+                        position: 'left',
                         ticks: {
                             suggestedMin: 10,
                             suggestedMax: 30
                         }
-                    }]
-                }
-            }
-        });
-        var pressCtx = $("#pressure");
-        var myChart = new Chart(pressCtx, {
-            type: 'line',
-            data: {
-                labels: datetime,
-                datasets: [{
-                    label: 'press',
-                    data: pressure,
-                    backgroundColor: "rgba(153,255,51,0.4)"
-                }]
-            },
-            options: {
-                maintainAspectRation: false,
-                animation: {
-                    duration: 0
-                },
-                elements: {
-                    line: {
-                        tension: 0
-                    }
-                },
-                scales: {
-                    yAxes: [{
+                    }, {
+                        "id": "y-axis-1",
+                        position: 'right',
+                        ticks: {
+                            suggestedMin: 0,
+                            suggestedMax: 100
+                        }
+                    }, {
+                        "id": "y-axis-2",
+                        position: 'left',
                         ticks: {
                             suggestedMin: 950,
                             suggestedMax: 1050
                         }
                     }]
-                }
-            }
-        });
-        var humCtx = $("#humidity");
-        var myChart = new Chart(humCtx, {
-            type: 'line',
-            data: {
-                labels: datetime,
-                datasets: [{
-                    label: 'hum',
-                    data: humidity,
-                    backgroundColor: "rgba(66,134,244,0.4)"
-                }]
-            },
-            options: {
-                maintainAspectRation: false,
-                animation: {
-                    duration: 0
                 },
+                maintainAspectRation: false,
                 elements: {
                     line: {
                         tension: 0
                     }
                 },
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            suggestedMin: 0,
-                            suggestedMax: 100
-                        }
-                    }]
-                }
+                animation: {
+                    duration: 0
+                },
             }
         });
     });
