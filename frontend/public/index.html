@@ -8,6 +8,9 @@
     <script src="code.js"></script>
   </head>
   <body>
+      Fetch data for the last <input id="hours" type="number" value="1"> Hours and render every <input id="skip" type="number" value="1">th Value<button onclick="graphDynamic()">Update</button>
+      <button onclick="graphHourly()">Hourly</button>
+      <button onclick="graphDaily()">Daily</button>
       <div class="container">
           <canvas id="bme280" width="400" height="400"></canvas>
       </div>
