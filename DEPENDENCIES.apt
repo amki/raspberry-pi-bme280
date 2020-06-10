@@ -1,1 +1,1 @@
-apt-get install postgresql libpqxx-dev nodejs npm
+apt-get install postgresql libpqxx-dev nodejs npm libcurl4-openssl-dev
