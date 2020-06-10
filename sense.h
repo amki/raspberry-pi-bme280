@@ -11,6 +11,7 @@ extern "C" {
 }
 
 #include "pghandler.hpp"
+#include "httpsock.hpp"
 
 #define SPI_READ    0x80
 #define SPI_WRITE   0x7F

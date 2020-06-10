@@ -1,14 +1,15 @@
 cmake_minimum_required (VERSION 2.8)
 project (Sensei)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++17)
 
 set(PostgreSQL_TYPE_INCLUDE_DIR "/usr/include/postgresql/")
 
 find_package(Threads REQUIRED)
 find_package(PostgreSQL REQUIRED)
+find_package(CURL REQUIRED)
 
-add_executable(Sensei sense.cpp main.cpp sense.cpp sense.h pghandler.hpp pghandler.cpp)
+add_executable(Sensei sense.cpp main.cpp sense.cpp sense.h httpsock.cpp httpsock.hpp pghandler.hpp pghandler.cpp)
 
 include_directories ("BME280_driver_cmake")
 add_subdirectory (BME280_driver_cmake)
@@ -21,4 +22,4 @@ if(CMAKE_THREAD_LIBS_INIT)
 endif()
 
 set(PostgreSQL_LIBRARIES "pqxx")
-target_link_libraries(Sensei bme280 ${PostgreSQL_LIBRARIES})
+target_link_libraries(Sensei bme280 ${PostgreSQL_LIBRARIES} curl)

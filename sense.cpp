@@ -160,7 +160,8 @@ void BME280_delay_msek(u32 msek) {
 }
 
 void init_db() {
-    PgHandler pgH("dbname = sensei user = sensei password = ohCou2rei9ouL0ae hostaddr = 127.0.0.1 port = 5432");
+    //PgHandler pgH("dbname = sensei user = sensei password = ohCou2rei9ouL0ae hostaddr = 127.0.0.1 port = 5432");
+    HTTPSock httpS("env.epow0.org","/api/bme280");
     s32 com_rslt = ERROR;
     while(true) {
         // Read data
@@ -184,7 +185,8 @@ void init_db() {
         std::cout << "Temperature is: " << ((float)data.v_comp_temp_s32[0])/100 << std::endl;
         std::cout << "Pressure is: " << ((float)data.v_comp_press_u32[0])/100 << std::endl;
         std::cout << "Humidity is: " << ((float)data.v_comp_humidity_u32[0])/1024 << std::endl;
-        pgH.insertBMEData(((float)data.v_comp_temp_s32[0])/100, ((float)data.v_comp_press_u32[0])/100, ((float)data.v_comp_humidity_u32[0])/1024);
+        httpS.sendBMEData(((float)data.v_comp_temp_s32[0])/100, ((float)data.v_comp_press_u32[0])/100, ((float)data.v_comp_humidity_u32[0])/1024);
+        //pgH.insertBMEData(((float)data.v_comp_temp_s32[0])/100, ((float)data.v_comp_press_u32[0])/100, ((float)data.v_comp_humidity_u32[0])/1024);
 
         usleep(10000000);
     }
