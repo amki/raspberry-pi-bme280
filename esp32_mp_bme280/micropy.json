@@ -1,0 +1,11 @@
+{
+    "name": "esp32_mp_bme280",
+    "stubs": {},
+    "dev-packages": {
+        "micropy-cli": "*"
+    },
+    "packages": {},
+    "config": {
+        "vscode": true
+    }
+}
