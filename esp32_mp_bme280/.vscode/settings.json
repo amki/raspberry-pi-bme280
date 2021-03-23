@@ -1,12 +1,15 @@
 {
     "python.linting.enabled": true,
     "python.jediEnabled": false,
-
-    // Loaded Stubs: 
-    "python.autoComplete.extraPaths": [".micropy\\esp32_mp_bme280"],
-    "python.autoComplete.typeshedPaths":  [".micropy\\esp32_mp_bme280"],
-    "python.analysis.typeshedPaths":  [".micropy\\esp32_mp_bme280"],
-
+    "python.autoComplete.extraPaths": [
+        ".micropy\\esp32_mp_bme280"
+    ],
+    "python.autoComplete.typeshedPaths": [
+        ".micropy\\esp32_mp_bme280"
+    ],
+    "python.analysis.typeshedPaths": [
+        ".micropy\\esp32_mp_bme280"
+    ],
     "python.linting.pylintEnabled": true,
     "python.languageServer": "Microsoft"
 }
